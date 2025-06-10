@@ -560,11 +560,18 @@ def on_preview_frame_changed(frame_num, files, fake_preview, enhancer, detection
     if is_processing or files is None or selected_preview_index >= len(files) or frame_num is None:
         return None
 
-    filename = files[selected_preview_index].name
-    if util.is_video(filename) or filename.lower().endswith('gif'):
-        current_frame = get_video_frame(filename, frame_num)
+    # 处理字符串路径或文件对象
+    if isinstance(files[selected_preview_index], str):
+        filepath = files[selected_preview_index]
+        filename = os.path.basename(filepath)
     else:
-        current_frame = get_image_frame(filename)
+        filename = files[selected_preview_index].name
+        filepath = files[selected_preview_index].name
+        
+    if util.is_video(filepath) or filename.lower().endswith('gif'):
+        current_frame = get_video_frame(filepath, frame_num)
+    else:
+        current_frame = get_image_frame(filepath)
     if current_frame is None:
         return None 
 
@@ -592,12 +599,19 @@ def on_preview_mask(frame_num, files, clip_text):
 
     if is_processing:
         return None
-        
-    filename = files[selected_preview_index].name
-    if util.is_video(filename) or filename.lower().endswith('gif'):
-        current_frame = get_video_frame(filename, frame_num)
+    
+    # 处理字符串路径或文件对象
+    if isinstance(files[selected_preview_index], str):
+        filepath = files[selected_preview_index]
+        filename = os.path.basename(filepath)
     else:
-        current_frame = get_image_frame(filename)
+        filename = files[selected_preview_index].name
+        filepath = files[selected_preview_index].name
+        
+    if util.is_video(filepath) or filename.lower().endswith('gif'):
+        current_frame = get_video_frame(filepath, frame_num)
+    else:
+        current_frame = get_image_frame(filepath)
     if current_frame is None:
         return None
 
@@ -694,9 +708,17 @@ def on_destfiles_changed(destfiles):
         return gr.Slider.update(value=0, maximum=0)
     
     selected_preview_index = 0
-    filename = destfiles[selected_preview_index].name
-    if util.is_video(filename) or filename.lower().endswith('gif'):
-        total_frames = get_video_frame_total(filename)
+    
+    # 处理字符串路径或文件对象
+    if isinstance(destfiles[selected_preview_index], str):
+        filepath = destfiles[selected_preview_index]
+        filename = os.path.basename(filepath)
+    else:
+        filename = destfiles[selected_preview_index].name
+        filepath = destfiles[selected_preview_index].name
+        
+    if util.is_video(filepath) or filename.lower().endswith('gif'):
+        total_frames = get_video_frame_total(filepath)
     else:
         total_frames = 0
     
@@ -709,9 +731,17 @@ def on_destfiles_selected(evt: gr.SelectData, target_files):
 
     if evt is not None:
         selected_preview_index = evt.index
-    filename = target_files[selected_preview_index].name
-    if util.is_video(filename) or filename.lower().endswith('gif'):
-        total_frames = get_video_frame_total(filename)
+    
+    # 处理字符串路径或文件对象
+    if isinstance(target_files[selected_preview_index], str):
+        filepath = target_files[selected_preview_index]
+        filename = os.path.basename(filepath)
+    else:
+        filename = target_files[selected_preview_index].name
+        filepath = target_files[selected_preview_index].name
+        
+    if util.is_video(filepath) or filename.lower().endswith('gif'):
+        total_frames = get_video_frame_total(filepath)
     else:
         total_frames = 0
 
@@ -720,11 +750,19 @@ def on_destfiles_selected(evt: gr.SelectData, target_files):
 
 def on_resultfiles_selected(evt: gr.SelectData, files):
     selected_index = evt.index
-    filename = files[selected_index].name
-    if util.is_video(filename) or filename.lower().endswith('gif'):
-        current_frame = get_video_frame(filename, 0)
+    
+    # 处理字符串路径或文件对象
+    if isinstance(files[selected_index], str):
+        filepath = files[selected_index]
+        filename = os.path.basename(filepath)
     else:
-        current_frame = get_image_frame(filename)
+        filename = files[selected_index].name
+        filepath = files[selected_index].name
+        
+    if util.is_video(filepath) or filename.lower().endswith('gif'):
+        current_frame = get_video_frame(filepath, 0)
+    else:
+        current_frame = get_image_frame(filepath)
     return convert_to_gradio(current_frame)
 
     
