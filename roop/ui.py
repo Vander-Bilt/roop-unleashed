@@ -113,10 +113,10 @@ def run():
                         target_faces = gr.Gallery(label="Target faces", allow_preview=True, preview=True, height=128, object_fit="scale-down")
                         with gr.Row():
                                 bt_remove_selected_target_face = gr.Button("Remove selected")
+                        bt_destfiles = gr.Files(label='Target File(s)', file_count="multiple", elem_id='filelist')
                         with gr.Row():
                             target_url_input = gr.Textbox(label="Target URL (Image/Video)", placeholder="Enter URL here...")
                             bt_download_target_url = gr.Button("Download from URL")
-                        bt_destfiles = gr.Files(label='Target File(s)', file_count="multiple", elem_id='filelist')
                 with gr.Row():
                     with gr.Column(visible=False) as dynamic_face_selection:
                         face_selection = gr.Gallery(label="Detected faces", allow_preview=True, preview=True, height=256, object_fit="scale-down")
