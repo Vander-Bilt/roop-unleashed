@@ -151,6 +151,9 @@ def run():
                                 bt_preview_mask = gr.Button("Show Mask Preview", variant='secondary')
                             with gr.Column(scale=2):
                                 maskpreview = gr.Image(label="Preview Mask", shape=(None,512), interactive=False)
+                with gr.Row():
+                    with gr.Accordion(label="Huggingface Token", open=False):
+                        with gr.Row():
                             with gr.Column():
                                 hf_token = gr.Textbox(label="HuggingFace Token", placeholder="Enter your HuggingFace token to upload results", type="password")
                 
