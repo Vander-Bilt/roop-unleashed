@@ -64,7 +64,7 @@ def download_file_from_url(url: str, save_dir: str) -> str | None:
         filename = None
         if content_disposition:
             import re
-            fname_match = re.findall('filename=["']?([^"']+)["']?', content_disposition)
+            fname_match = re.findall('filename=["\']?([^"\']+)["\']?', content_disposition)
             if fname_match:
                 filename = fname_match[0]
 
