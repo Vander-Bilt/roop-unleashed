@@ -11,16 +11,10 @@ import torch
 import gradio
 import tempfile
 
-import facelib
-import numpy
-import onnxruntime
-import psutil
-import shutil
-import tempfile
-import urllib
-import webbrowser
+
 import requests
 import uuid
+
 from pathlib import Path
 from typing import List, Any
 from tqdm import tqdm
