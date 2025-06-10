@@ -113,6 +113,9 @@ def run():
                         target_faces = gr.Gallery(label="Target faces", allow_preview=True, preview=True, height=128, object_fit="scale-down")
                         with gr.Row():
                                 bt_remove_selected_target_face = gr.Button("Remove selected")
+                        with gr.Row():
+                            target_url_input = gr.Textbox(label="Target URL (Image/Video)", placeholder="Enter URL here...")
+                            bt_download_target_url = gr.Button("Download from URL")
                         bt_destfiles = gr.Files(label='Target File(s)', file_count="multiple", elem_id='filelist')
                 with gr.Row():
                     with gr.Column(visible=False) as dynamic_face_selection:
@@ -275,6 +278,7 @@ def run():
             bt_destfiles.change(fn=on_destfiles_changed, inputs=[bt_destfiles], outputs=[preview_frame_num]).then(fn=on_preview_frame_changed, inputs=previewinputs, outputs=[previewimage])
             bt_destfiles.select(fn=on_destfiles_selected, inputs=[bt_destfiles], outputs=[preview_frame_num]).then(fn=on_preview_frame_changed, inputs=previewinputs, outputs=[previewimage])
             bt_destfiles.clear(fn=on_clear_destfiles, outputs=[target_faces])
+            bt_download_target_url.click(fn=on_download_target_url, inputs=[target_url_input], outputs=[bt_destfiles, preview_frame_num]).then(fn=on_preview_frame_changed, inputs=previewinputs, outputs=[previewimage])
             resultfiles.select(fn=on_resultfiles_selected, inputs=[resultfiles], outputs=[resultimage])
 
             face_selection.select(on_select_face, None, None)
@@ -359,6 +363,45 @@ def on_settings_changed_misc(new_val, attribname):
         setattr(roop.globals.CFG, attribname, new_val)
     else:
         print("Didn't find attrib!")
+
+
+def on_download_target_url(url_input, progress=gr.Progress()):
+    global RECENT_DIRECTORY_TARGET
+    if not url_input:
+        gr.Warning("URL input is empty.")
+        return None, gr.Slider.update() # Return None for bt_destfiles and no change for preview_frame_num
+
+    download_dir = os.path.join(os.getcwd(), "temp", "downloaded_targets")
+    os.makedirs(download_dir, exist_ok=True)
+
+    progress(0, desc="Downloading target from URL...")
+    downloaded_file_path = util.download_file_from_url(url_input, download_dir)
+    progress(1, desc="Download complete.")
+
+    if downloaded_file_path:
+        RECENT_DIRECTORY_TARGET = download_dir
+        # Simulate the file being selected in bt_destfiles
+        # We need to return a list of file paths for the gr.Files component
+        # And then trigger the subsequent updates for preview
+        # The on_destfiles_changed function expects a list of TemporaryFileWrapper objects
+        # or a list of file paths. Here we provide a list with the single downloaded file path.
+        
+        # Update bt_destfiles with the new file
+        # Gradio's gr.Files component expects a list of file paths or TemporaryFileWrapper objects.
+        # We'll update it with the path of the downloaded file.
+        # It's better to append to existing files if any, or set it if none.
+        # For simplicity here, we'll just set it to the new file.
+        # If you need to append, you'd need to get current bt_destfiles value first.
+        
+        # Trigger on_destfiles_changed which updates preview_frame_num
+        # and then on_preview_frame_changed updates the preview image
+        # The output of this function is directly fed into bt_destfiles and preview_frame_num
+        # So we call on_destfiles_changed manually to get the correct preview_frame_num update
+        updated_preview_frame_num_state = on_destfiles_changed([downloaded_file_path])
+        return [downloaded_file_path], updated_preview_frame_num_state
+    else:
+        gr.Error("Failed to download file from URL.")
+        return None, gr.Slider.update() # No change if download failed
         
 
 
