@@ -1,2 +1,2 @@
-name = 'roop unleashed'
-version = '2.7.9'
+name = 'Smart Face Swap'
+version = '1.1.0'
